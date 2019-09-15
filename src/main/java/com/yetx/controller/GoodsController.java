@@ -1,15 +1,26 @@
 package com.yetx.controller;
 
+import com.yetx.common.Result;
+import com.yetx.common.ResultStatus;
 import com.yetx.dao.GoodsMapper;
 import com.yetx.pojo.MiaoshaUser;
+import com.yetx.redis.MiaoshaGoodsKey;
+import com.yetx.redis.RedisService;
 import com.yetx.service.GoodsService;
+import com.yetx.vo.GoodsDetailVO;
 import com.yetx.vo.GoodsVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.spring5.context.webflux.SpringWebFluxContext;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -25,27 +36,57 @@ public class GoodsController {
     @Autowired
     GoodsService goodsService;
 
+    @Autowired
+    RedisService redisService;
 
-    @RequestMapping(value="/list")
-    public String list(Model model, MiaoshaUser user) {
-        log.info("GoodsController--user:{}",user);
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @Autowired
+    ThymeleafViewResolver thymeleafViewResolver;
+    // REST版
+    @RequestMapping(value="/list2")
+    @ResponseBody
+    public Result<List<GoodsVO>> listGoods(Model model, MiaoshaUser user) {
+        // 取缓存
+        List<GoodsVO> goodsVOList = redisService.getList(MiaoshaGoodsKey.miaoshaGoodsListKey,"",GoodsVO.class);
+        if(goodsVOList!=null&&goodsVOList.size()!=0){
+            goodsVOList.forEach(System.out::println);
+            return Result.success(goodsVOList);
+        }
+        // 取数据库并插入缓存
+        List<GoodsVO> goodsList = goodsService.listGoodsVo();
+        redisService.setList(MiaoshaGoodsKey.miaoshaGoodsListKey,"",goodsList);
+        return Result.success(goodsList);
+    }
+
+    @RequestMapping(value="/to_list", produces="text/html")
+    @ResponseBody
+    public String list(HttpServletRequest request, HttpServletResponse response, Model model,MiaoshaUser user) {
         model.addAttribute("user", user);
+//        取缓存
+    	String html = redisService.get(MiaoshaGoodsKey.miaoshaGoodsListHTMLKey, "", String.class);
+    	if(!StringUtils.isEmpty(html)) {
+    		return html;
+    	}
         List<GoodsVO> goodsList = goodsService.listGoodsVo();
         model.addAttribute("goodsList", goodsList);
-        return "goods_list";
+//    	 return "goods_list";
+        WebContext ctx = new WebContext(request,response,
+                request.getServletContext(),request.getLocale(),model.asMap());
+        //手动渲染
+        html = thymeleafViewResolver.getTemplateEngine().process("goods_list", ctx);
+        if(!StringUtils.isEmpty(html)) {
+            redisService.set(MiaoshaGoodsKey.miaoshaGoodsListHTMLKey, "", html);
+        }
+        return html;
     }
     @RequestMapping("/detail/{goodsId}")
-    public String queryGoodsDetail(Model model, MiaoshaUser user, @PathVariable("goodsId")long goodsId, HttpServletRequest request){
-        Cookie[] cookies = request.getCookies();
-        for(Cookie cookie:cookies){
-            log.info(cookies.toString());
-        }
-//        log.info(request.getCookies());
-        model.addAttribute("user", user);
-
+    @ResponseBody
+    public Result<GoodsDetailVO> queryGoodsDetail(Model model, MiaoshaUser user, @PathVariable("goodsId")long goodsId, HttpServletRequest request){
         GoodsVO goods = goodsService.getGoodsVoByGoodsId(goodsId);
-        model.addAttribute("goods", goods);
-
+        if(goods==null)
+            return Result.error(ResultStatus.GOODS_NOT_EXIST);
         long startAt = goods.getStartDate().getTime();
         long endAt = goods.getEndDate().getTime();
         long now = System.currentTimeMillis();
@@ -62,9 +103,13 @@ public class GoodsController {
             miaoshaStatus = 1;
             remainSeconds = 0;
         }
-        model.addAttribute("miaoshaStatus", miaoshaStatus);
-        model.addAttribute("remainSeconds", remainSeconds);
-        return "goods_detail";
+
+        GoodsDetailVO goodsDetailVO = new GoodsDetailVO();
+        goodsDetailVO.setGoods(goods);
+        goodsDetailVO.setUser(user);
+        goodsDetailVO.setMiaoshaStatus(miaoshaStatus);
+        goodsDetailVO.setRemainSeconds(remainSeconds);
+        return Result.success(goodsDetailVO);
     }
 
 

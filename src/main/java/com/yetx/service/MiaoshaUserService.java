@@ -29,16 +29,17 @@ public class MiaoshaUserService {
 
 
     public MiaoshaUser getByMobie(String mobile) {
-//        取缓存
-//        MiaoshaUser user = redisService.get(MiaoShaUserKey.getByNickName, ""+nickName, MiaoshaUser.class);
-//        if(user != null) {
-//            return user;
-//        }
+        //取缓存
+        MiaoshaUser user = redisService.get(MiaoshaUserKey.userId, ""+mobile, MiaoshaUser.class);
+        if(user != null) {
+            System.out.println("not null");
+            return user;
+        }
         //取数据库
-        MiaoshaUser user = miaoshaUserMapper.selectByPrimaryKey(Long.parseLong(mobile));
-//        if(user != null) {
-//            redisService.set(MiaoShaUserKey.getByNickName, ""+nickName, user);
-//        }
+        user = miaoshaUserMapper.selectByPrimaryKey(Long.parseLong(mobile));
+        if(user != null) {
+            redisService.set(MiaoshaUserKey.userId, ""+mobile, user);
+        }
         return user;
     }
     public String login(HttpServletResponse response, LoginVO loginVO){
@@ -47,7 +48,7 @@ public class MiaoshaUserService {
         String mobile = loginVO.getMobile();
         String formPass = loginVO.getPassword();
         MiaoshaUser user = getByMobie(mobile);
-        log.info(user.toString());
+
         //验证密码
         String dbPass = user.getPassword();
         String saltDB = user.getSalt();
@@ -60,10 +61,14 @@ public class MiaoshaUserService {
         addCookie(response,token,user);
         return token;
     }
+
+    //TODO: register and modifyPassword
+
     public MiaoshaUser getUserByToken(HttpServletResponse response,String token){
         if(StringUtils.isEmpty(token))
             return null;
         MiaoshaUser user = redisService.get(MiaoshaUserKey.token,token,MiaoshaUser.class);
+//        log.error(user.toString());
         if(user!=null)
             addCookie(response,token,user);
         return user;

@@ -19,9 +19,10 @@ public enum ResultStatus {
 
     MIAO_SHA_DONE(500500, "商品已经秒杀完毕"),
     REPEATE_MIAOSHA(500501,"重复秒杀"),
+    GOODS_NOT_EXIST(500502,"商品不存在"),
 
 
-
+    ORDER_NOT_EXIST(500600,"订单不存在"),
 
     REDIS_ERROR(500701,"redis错误"),
 

@@ -32,8 +32,6 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
     public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
-        log.info("here");
-        System.out.println("=============");
         HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
         HttpServletResponse response = nativeWebRequest.getNativeResponse(HttpServletResponse.class);
         String paramToken = request.getParameter(MiaoshaUserService.COOKIE_NAME_TOKEN);
@@ -41,7 +39,8 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         if(StringUtils.isEmpty(cookieToken) && StringUtils.isEmpty(paramToken)) {
             return null;
         }
-        return userService.getUserByToken(response,cookieToken);
+        String token = StringUtils.isEmpty(paramToken)?cookieToken:paramToken;
+        return userService.getUserByToken(response,token);
     }
     private String getCookieValue(HttpServletRequest request,String cookieName){
         Cookie[]  cookies = request.getCookies();

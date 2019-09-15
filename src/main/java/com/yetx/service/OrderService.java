@@ -3,6 +3,7 @@ package com.yetx.service;
 import com.yetx.constant.OrderChanelType;
 import com.yetx.constant.OrderStatus;
 import com.yetx.dao.MiaoshaOrderMapper;
+import com.yetx.dao.OrderInfoMapper;
 import com.yetx.pojo.MiaoshaOrder;
 import com.yetx.pojo.MiaoshaUser;
 import com.yetx.pojo.OrderInfo;
@@ -19,6 +20,10 @@ public class OrderService {
 
     @Autowired
     MiaoshaOrderMapper orderMapper;
+    @Autowired
+    OrderInfoMapper orderInfoMapper;
+
+
 
     public MiaoshaOrder getMiaoshaOrderByUserIdGoodsId(long userId, long goodsId) {
         return orderMapper.getMiaoshaOrderByUserIdGoodsId(userId, goodsId);
@@ -36,15 +41,18 @@ public class OrderService {
         orderInfo.setOrderChannel(OrderChanelType.PC);
         orderInfo.setStatus(OrderStatus.NO_PAY);
         orderInfo.setUserId(user.getId());
-        long orderId = orderMapper.insertOrderInfo(orderInfo);
+        orderMapper.insertOrderInfo(orderInfo);
 
         MiaoshaOrder miaoshaOrder = new MiaoshaOrder();
         miaoshaOrder.setGoodsId(goodsVO.getId());
-        miaoshaOrder.setOrderId(orderId);
+        miaoshaOrder.setOrderId(orderInfo.getId());
         miaoshaOrder.setUserId(user.getId());
         orderMapper.insertMiaoshaOrder(miaoshaOrder);
         return orderInfo;
 
     }
 
+    public OrderInfo getMiaoshaOrderByOrderId(long orderId){
+        return orderInfoMapper.selectByPrimaryKey(orderId);
+    }
 }

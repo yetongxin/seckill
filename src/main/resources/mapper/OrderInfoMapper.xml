@@ -10,8 +10,8 @@
       <arg column="goods_name" jdbcType="VARCHAR" javaType="java.lang.String" />
       <arg column="goods_count" jdbcType="INTEGER" javaType="java.lang.Integer" />
       <arg column="goods_price" jdbcType="DECIMAL" javaType="java.math.BigDecimal" />
-      <arg column="order_channel" jdbcType="TINYINT" javaType="java.lang.Byte" />
-      <arg column="status" jdbcType="TINYINT" javaType="java.lang.Byte" />
+      <arg column="order_channel" jdbcType="TINYINT" javaType="java.lang.Integer" />
+      <arg column="status" jdbcType="TINYINT" javaType="java.lang.Integer" />
       <arg column="create_date" jdbcType="TIMESTAMP" javaType="java.util.Date" />
       <arg column="pay_date" jdbcType="TIMESTAMP" javaType="java.util.Date" />
     </constructor>

@@ -3,6 +3,7 @@ package com.yetx.service;
 import com.yetx.dao.GoodsMapper;
 import com.yetx.dao.MiaoshaGoodsMapper;
 import com.yetx.pojo.MiaoshaGoods;
+import com.yetx.redis.RedisService;
 import com.yetx.vo.GoodsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import java.util.List;
 public class GoodsService {
     @Autowired
     GoodsMapper goodsMapper;
+    @Autowired
+    RedisService redisService;
 
     public List<GoodsVO> listGoodsVo(){
         return goodsMapper.listMiaoshaGoods();
@@ -24,7 +27,10 @@ public class GoodsService {
         return goodsMapper.getGoodsVoByGoodsId(goodsId);
     }
 
-    public void reduceStock(GoodsVO goodsVO){
-        goodsMapper.reduceStock(goodsVO.getId());
+    public boolean reduceStock(GoodsVO goodsVO){
+        MiaoshaGoods g = new MiaoshaGoods();
+        g.setGoodsId(goodsVO.getId());
+        int updateRows =  goodsMapper.reduceStock(g);
+        return  updateRows>0;
     }
 }
