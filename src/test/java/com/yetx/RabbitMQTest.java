@@ -11,11 +11,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 public class RabbitMQTest {
 
-    @Autowired
-    private MQSender helloSender;
 
     @Test
     public void hello() throws Exception {
-        helloSender.send("hello");
+
     }
 }

@@ -7,6 +7,8 @@ import com.yetx.dao.OrderInfoMapper;
 import com.yetx.pojo.MiaoshaOrder;
 import com.yetx.pojo.MiaoshaUser;
 import com.yetx.pojo.OrderInfo;
+import com.yetx.redis.MiaoshaOrderKey;
+import com.yetx.redis.RedisService;
 import com.yetx.vo.GoodsVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,11 +24,16 @@ public class OrderService {
     MiaoshaOrderMapper orderMapper;
     @Autowired
     OrderInfoMapper orderInfoMapper;
-
+    @Autowired
+    RedisService redisService;
 
 
     public MiaoshaOrder getMiaoshaOrderByUserIdGoodsId(long userId, long goodsId) {
-        return orderMapper.getMiaoshaOrderByUserIdGoodsId(userId, goodsId);
+//        return orderMapper.getMiaoshaOrderByUserIdGoodsId(userId, goodsId);
+        return redisService.get(MiaoshaOrderKey.miaoshaOrderByUidGid,MiaoshaOrderKey.convertOrderKey(userId,goodsId),MiaoshaOrder.class);
+    }
+    public boolean setMiaoshaOrderByUserIdGoodsId(long userId, long goodsId, OrderInfo orderInfo) {
+        return redisService.set(MiaoshaOrderKey.miaoshaOrderByUidGid,MiaoshaOrderKey.convertOrderKey(userId,goodsId), orderInfo);
     }
 
     @Transactional
@@ -48,11 +55,22 @@ public class OrderService {
         miaoshaOrder.setOrderId(orderInfo.getId());
         miaoshaOrder.setUserId(user.getId());
         orderMapper.insertMiaoshaOrder(miaoshaOrder);
+
+        // 将完成的订单写入redis
+        setMiaoshaOrderByUserIdGoodsId(user.getId(),goodsVO.getId(),orderInfo);
+
         return orderInfo;
 
     }
 
     public OrderInfo getMiaoshaOrderByOrderId(long orderId){
         return orderInfoMapper.selectByPrimaryKey(orderId);
+    }
+
+    public void deleteAllOrders(){
+
+        orderMapper.deleteAllMiaoshaOrder();
+        orderMapper.deleteAllOrderInfo();
+
     }
 }

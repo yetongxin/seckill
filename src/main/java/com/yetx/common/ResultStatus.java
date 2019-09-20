@@ -25,6 +25,7 @@ public enum ResultStatus {
     ORDER_NOT_EXIST(500600,"订单不存在"),
 
     REDIS_ERROR(500701,"redis错误"),
+    QUEUE_PARAM_ERROR(500702,"消息参数错误"),
 
     BIND_ERROR(500801, "参数校验错误");
     private int code;

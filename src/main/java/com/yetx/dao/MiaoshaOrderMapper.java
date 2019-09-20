@@ -2,10 +2,7 @@ package com.yetx.dao;
 
 import com.yetx.pojo.MiaoshaOrder;
 import com.yetx.pojo.OrderInfo;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.SelectKey;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -33,4 +30,10 @@ public interface MiaoshaOrderMapper {
             + "#{userId}, #{goodsId}, #{goodsName}, #{goodsCount}, #{goodsPrice}, #{orderChannel},#{status},#{createDate} )")
     @SelectKey(keyColumn="id", keyProperty="id", resultType=long.class, before=false, statement="select last_insert_id()")
     public int insertOrderInfo(OrderInfo orderInfo);
+
+    @Delete("delete from order_info")
+    public int deleteAllOrderInfo();
+
+    @Delete("delete from miaosha_order")
+    public int deleteAllMiaoshaOrder();
 }
